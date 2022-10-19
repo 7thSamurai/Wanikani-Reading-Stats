@@ -42,75 +42,75 @@ user_level = 0
 
 # Initialize Wanikani API stuff
 def init_api(key):
-	global headers
-	global user_name
-	global user_level
+    global headers
+    global user_name
+    global user_level
 
-	headers = {"Authorization": "Bearer %s" % key}
+    headers = {"Authorization": "Bearer %s" % key}
 
-	try:
-		url = "https://api.wanikani.com/v2/user"
-		response = requests.get(url, headers=headers).json()
+    try:
+        url = "https://api.wanikani.com/v2/user"
+        response = requests.get(url, headers=headers).json()
 
-		if "error" in response:
-			print("Invalid API Key %s" % key)
-			exit()
+        if "error" in response:
+            print("Invalid API Key %s" % key)
+            exit()
 
-		user_name = response["data"]["username"]
-		user_level = response["data"]["level"]
-	except:
-		print("Error connecting to Wanikani!")
-		exit()
+        user_name = response["data"]["username"]
+        user_level = response["data"]["level"]
+    except:
+        print("Error connecting to Wanikani!")
+        exit()
 
 # Get a list of the subject pages
 def get_pages():
-	url = "https://api.wanikani.com/v2/subjects"
-	pages = []
-	done = 0.0
+    url = "https://api.wanikani.com/v2/subjects"
+    pages = []
+    done = 0.0
 
-	while url != None:
-		result = get_page(url)
-		pages.append(result[0])
-		url = result[1]
-		done += result[2]
+    while url != None:
+        result = get_page(url)
+        pages.append(result[0])
+        url = result[1]
+        done += result[2]
 
-		print("\tRetrieved %i%%" % (done*100))
+        print("\tRetrieved %i%%" % (done*100))
 
-		# This is really not nessary, as we will only be making a couple of API calls
-		# time.sleep(1)
+        # This is really not nessary, as we will only be making a couple of API calls
+        # time.sleep(1)
 
-	return pages
+    return pages
 
 # Get a certain page
 def get_page(url):
-	response = requests.get(url, headers=headers)
-	page = response.json()
-	next_url = page["pages"]["next_url"]
-	percent = page["pages"]["per_page"] / page["total_count"]
+    response = requests.get(url, headers=headers)
+    page = response.json()
+    next_url = page["pages"]["next_url"]
+    percent = page["pages"]["per_page"] / page["total_count"]
 
-	return (page["data"], next_url, percent)
+    return (page["data"], next_url, percent)
 
 # Get a list of subjects
 def get_subjects():
-	pages = get_pages()
-	subjects = []
+    pages = get_pages()
+    subjects = []
 
-	for page in pages:
-		for entry in page:
-			subjects.append(entry)
+    for page in pages:
+        for entry in page:
+            subjects.append(entry)
 
-	return subjects
+    return subjects
 
 # Get a dictionary of kanji from wanikani
 def get_kanji():
-	subjects = get_subjects()
-	kanji = {}
+    subjects = get_subjects()
+    kanji = {}
 
-	for entry in subjects:
-		if entry["object"] == "kanji":
-			kanji[entry["data"]["slug"]] = entry["data"]["level"]
+    for entry in subjects:
+        if entry["object"] == "kanji":
+            kanji[entry["data"]["slug"]] = entry["data"]["level"]
 
-	return kanji
+    return kanji
 
 ###############################
 # Data Analysis stuff         #
@@ -118,69 +118,69 @@ def get_kanji():
 
 # Checks if a certain Unicode character is a kanji
 def is_kanji(char):
-	return char >= '\u4e00' and char <= '\u9faf'
+    return char >= '\u4e00' and char <= '\u9faf'
 
 # Read the kanji from a text file
 def read_kanji(path):
-	kanji = []
-	text = ""
+    kanji = []
+    text = ""
 
-	try:
-		file = open(path, 'r')
-		text = file.read()
-		file.close()
-	except:
-		print("File \"%s\" does not exist!" % path)
-		exit()
+    try:
+        file = open(path, 'r')
+        text = file.read()
+        file.close()
+    except:
+        print("File \"%s\" does not exist!" % path)
+        exit()
 
-	for char in text:
-		if is_kanji(char) and char not in kanji:
-			kanji.append(char)
+    for char in text:
+        if is_kanji(char) and char not in kanji:
+            kanji.append(char)
 
-	return kanji
+    return kanji
 
 # Prints a row for the statistics table
 def print_row(level, user_kanji, file_kanji):
-	count = 0
+    count = 0
 
-	for kanji in file_kanji:
-		if kanji in user_kanji and user_kanji[kanji] <= level:
-			count += 1
+    for kanji in file_kanji:
+        if kanji in user_kanji and user_kanji[kanji] <= level:
+            count += 1
 
-	count = count / len(file_kanji) * 100
-	row = "\t%i\t\t%i%%" % (level, count)
+    count = count / len(file_kanji) * 100
+    row = "\t%i\t\t%i%%" % (level, count)
 
-	if level == user_level:
-		print("*" + row)
-	else:
-		print(row)
+    if level == user_level:
+        print("*" + row)
+    else:
+        print(row)
 
 ###############################
 # Main                        #
 ###############################
 
 def print_section(str):
-	print(str)
-	print("=" * len(str))
+    print(str)
+    print("=" * len(str))
 
 def main(path, key):
-	init_api(key)
+    init_api(key)
 
-	print_section("Retrieving data from Wanikani...")
-	user_kanji = get_kanji()
+    print_section("Retrieving data from Wanikani...")
+    user_kanji = get_kanji()
 
-	print("\nReading data from file...")
-	file_kanji = read_kanji(path)
+    print("\nReading data from file...")
+    file_kanji = read_kanji(path)
 
-	print_section("\nStatistics for file \"%s\" for user %s(Level %i)" % (path, user_name, user_level))
-	print("\tLevel\t\tPercent")
+    print_section("\nStatistics for file \"%s\" for user %s(Level %i)" % (path, user_name, user_level))
+    print("\tLevel\t\tPercent")
 
-	for level in range(1, 61):
-		print_row(level, user_kanji, file_kanji)
+    for level in range(1, 61):
+        print_row(level, user_kanji, file_kanji)
 
 if __name__ == '__main__':
-	if len(sys.argv) != 3:
-		print("Usage: %s <Path to Text File> <API Key>" % sys.argv[0])
-		exit()
+    if len(sys.argv) != 3:
+        print("Usage: %s <Path to Text File> <API Key>" % sys.argv[0])
+        exit()
 
-	main(sys.argv[1], sys.argv[2])
+    main(sys.argv[1], sys.argv[2])
